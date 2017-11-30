@@ -2,21 +2,25 @@
 See:
 https://github.com/littlecodersh/ItChat
 """
-
+import re
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-import itchat
 
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+__version__ = re.findall(r"VERSION\s*\=\s*'([\w\.\-]+)'",
+                         open(path.join(here, 'itchat/config.py')).read())[0]
+
+
 setup(
     name='itchat',
 
-    version=itchat.__version__,
+    version=__version__,
 
     description='A complete wechat personal account api',
     long_description=long_description,
@@ -47,7 +51,7 @@ setup(
     # simple. Or you can use find_packages().
     packages=find_packages(),
 
-    install_requires=['requests', 'pyqrcode', 'pypng'],
+    install_requires=['requests', 'pyqrcode', 'pypng', 'blinker'],
 
     # List additional groups of dependencies here
     extras_require={},

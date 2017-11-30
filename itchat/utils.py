@@ -80,7 +80,10 @@ def print_qr(fileDir):
     if config.OS == 'Darwin':
         subprocess.call(['open', fileDir])
     elif config.OS == 'Linux':
-        subprocess.call(['xdg-open', fileDir])
+        try:
+            subprocess.call(['xdg-open', fileDir])
+        except FileNotFoundError:
+            pass
     else:
         os.startfile(fileDir)
 
