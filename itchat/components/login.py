@@ -63,7 +63,10 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                 print('Timeout as user setting.')
                 return
 
-            status, extra = self.check_login()
+            if isLoggedIn is not None:
+                status, extra = self.check_login()
+            else:
+                status, extra = self.check_login(is_scanned=True)
 
             if hasattr(qrCallback, '__call__'):
                 qrCallback(uuid=self.uuid, status=status, qrcode=qrStorage.getvalue())
@@ -144,12 +147,13 @@ def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
             utils.print_qr(picDir)
     return qrStorage
 
-def check_login(self, uuid=None):
+def check_login(self, uuid=None, is_scanned=False):
     uuid = uuid or self.uuid
+    tip = 0 if is_scanned else 1
     url = '%s/cgi-bin/mmwebwx-bin/login' % config.BASE_URL
     localTime = int(time.time())
-    params = 'loginicon=true&uuid=%s&tip=1&r=%s&_=%s' % (
-        uuid, int(-localTime / 1579), localTime)
+    params = 'loginicon=true&uuid=%s&tip=%s&r=%s&_=%s' % (
+        uuid, tip, int(-localTime / 1579), localTime)
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.code=(\d+)'
@@ -229,19 +233,19 @@ def web_init(self):
     self.storageClass.userName = dic['User']['UserName']
     self.storageClass.nickName = dic['User']['NickName']
     # deal with contact list returned when init
-    contactList = dic.get('ContactList', [])		
-    chatroomList, otherList = [], []		
-    for m in contactList:		
-        if m['Sex'] != 0:		
-            otherList.append(m)		
-        elif '@@' in m['UserName']:		
+    contactList = dic.get('ContactList', [])
+    chatroomList, otherList = [], []
+    for m in contactList:
+        if m['Sex'] != 0:
+            otherList.append(m)
+        elif '@@' in m['UserName']:
             m['MemberList'] = [] # don't let dirty info pollute the list
-            chatroomList.append(m)		
-        elif '@' in m['UserName']:		
-            # mp will be dealt in update_local_friends as well		
-            otherList.append(m)		
+            chatroomList.append(m)
+        elif '@' in m['UserName']:
+            # mp will be dealt in update_local_friends as well
+            otherList.append(m)
     if chatroomList:
-        update_local_chatrooms(self, chatroomList)		
+        update_local_chatrooms(self, chatroomList)
     if otherList:
         update_local_friends(self, otherList)
     return dic
